@@ -1,28 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Calendar, Trophy, BarChart3, Users, Flame, AlertCircle } from 'lucide-react';
 
-// Mock data - in real app, this would come from Firebase
-const mockPlayers = [
-  'Alex', 'Sarah', 'Mike', 'Emma', 'James', 'Lisa', 'Tom', 'Rachel'
-];
-
-const mockScoresToday = [
-  { player: 'Emma', score: 2, time: '8:32 AM' },
-  { player: 'Mike', score: 3, time: '9:15 AM' },
-  { player: 'Sarah', score: 4, time: '10:45 AM' },
-  { player: 'Alex', score: 3, time: '12:20 PM' },
-  { player: 'James', score: 'X', time: '2:45 PM' }
-];
-
-const mockLeaderboard = [
-  { name: 'Emma', score: 18, avg: 3.2, streak: 5 },
-  { name: 'Mike', score: 20, avg: 3.5, streak: 3 },
-  { name: 'Sarah', score: 22, avg: 3.8, streak: 6 },
-  { name: 'Alex', score: 24, avg: 4.0, streak: 2 },
-  { name: 'James', score: 27, avg: 3.9, streak: 1 }
-];
-
-const usedWords = ['CRANE', 'SLATE', 'AUDIO', 'ROAST', 'STARE', 'ADIEU', 'AROSE', 'LEARN'];
+// This is a demo version showing how the app will work with Firebase
+// In your actual implementation, you'll connect to Firebase
 
 const WordleNerdlesApp = () => {
   const [activeTab, setActiveTab] = useState('submit');
@@ -32,41 +12,99 @@ const WordleNerdlesApp = () => {
   const [wordInput, setWordInput] = useState('');
   const [wordStatus, setWordStatus] = useState({ message: '', type: '' });
   const [submitted, setSubmitted] = useState(false);
-
+  
+  // Demo data - in your real app, this comes from Firebase
+  const [players] = useState([
+    { id: '1', name: 'Alex' },
+    { id: '2', name: 'Sarah' },
+    { id: '3', name: 'Mike' },
+    { id: '4', name: 'Emma' },
+    { id: '5', name: 'James' },
+    { id: '6', name: 'Lisa' },
+    { id: '7', name: 'Tom' },
+    { id: '8', name: 'Rachel' }
+  ]);
+  
+  const [todayScores, setTodayScores] = useState([
+    { id: '1', player: 'Emma', score: 2, time: '8:32 AM' },
+    { id: '2', player: 'Mike', score: 3, time: '9:15 AM' }
+  ]);
+  
+  const [weeklyScores] = useState([
+    { name: 'Emma', totalScore: 18, avg: 3.2, streak: 5 },
+    { name: 'Mike', totalScore: 20, avg: 3.5, streak: 3 },
+    { name: 'Sarah', totalScore: 22, avg: 3.8, streak: 6 }
+  ]);
+  
+  const [usedWords] = useState([
+    { word: 'CRANE', week: 12, picker: 'Sarah' },
+    { word: 'SLATE', week: 11, picker: 'Mike' },
+    { word: 'AUDIO', week: 10, picker: 'Emma' }
+  ]);
+  
   const currentWeek = 12;
-  const currentWordPicker = 'Sarah';
-  const nextWordPicker = 'Tom';
-  const currentWord = 'CRANE';
+  const currentWordData = { word: 'CRANE', picker: 'Sarah' };
 
-  const handleScoreSubmit = () => {
-    if (selectedPlayer && selectedScore) {
-      // In real app, this would save to Firebase
-      setSubmitted(true);
-      setTimeout(() => {
-        setSubmitted(false);
-        setSelectedPlayer('');
-        setSelectedScore(null);
-      }, 2000);
-    }
+  // Simulate submitting score
+  const handleScoreSubmit = async () => {
+    if (!selectedPlayer || selectedScore === null) return;
+
+    // Show submission feedback
+    setSubmitted(true);
+    
+    // Add to today's scores (in real app, this goes to Firebase)
+    const newScore = {
+      id: Date.now().toString(),
+      player: selectedPlayer,
+      score: selectedScore,
+      time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    };
+    
+    setTodayScores([...todayScores, newScore]);
+    
+    setTimeout(() => {
+      setSubmitted(false);
+      setSelectedPlayer('');
+      setSelectedScore(null);
+    }, 2000);
   };
 
-  const checkWord = () => {
+  // Check and submit word
+  const submitWord = async () => {
     const word = wordInput.toUpperCase();
     
     if (word.length !== 5) {
       setWordStatus({ message: '❌ Word must be exactly 5 letters', type: 'invalid' });
-    } else if (usedWords.includes(word)) {
-      setWordStatus({ message: '❌ This word has already been used!', type: 'invalid' });
-    } else if (!/^[A-Z]{5}$/.test(word)) {
-      setWordStatus({ message: '❌ Word must contain only letters', type: 'invalid' });
-    } else {
-      setWordStatus({ message: '✅ Great choice! This word is available', type: 'valid' });
+      return;
     }
+    
+    if (!/^[A-Z]{5}$/.test(word)) {
+      setWordStatus({ message: '❌ Word must contain only letters', type: 'invalid' });
+      return;
+    }
+
+    const wordExists = usedWords.some(w => w.word === word);
+    if (wordExists) {
+      setWordStatus({ message: '❌ This word has already been used!', type: 'invalid' });
+      return;
+    }
+
+    // In real app, this saves to Firebase
+    setWordStatus({ message: '✅ Word submitted successfully!', type: 'valid' });
+    setWordInput('');
+    
+    setTimeout(() => {
+      setShowWordSubmit(false);
+      setWordStatus({ message: '', type: '' });
+    }, 2000);
   };
 
+  // Get missing players
   const getMissingPlayers = () => {
-    const submittedPlayers = mockScoresToday.map(s => s.player);
-    return mockPlayers.filter(p => !submittedPlayers.includes(p));
+    const submittedPlayers = todayScores.map(s => s.player);
+    return players
+      .map(p => p.name)
+      .filter(name => !submittedPlayers.includes(name));
   };
 
   const getScoreColor = (score) => {
@@ -88,16 +126,20 @@ const WordleNerdlesApp = () => {
         <div className="h-full bg-white rounded-2xl overflow-hidden flex flex-col">
           {/* Status Bar */}
           <div className="px-6 py-2 flex justify-between text-xs text-gray-600">
-            <span>9:41 AM</span>
+            <span>{new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
             <span>📶 📷 🔋</span>
           </div>
 
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white p-6 text-center">
             <h1 className="text-2xl font-bold mb-1">Wordle Nerdles 🤓</h1>
-            <div className="text-sm opacity-90">Week {currentWeek} • Started by {currentWordPicker}</div>
+            <div className="text-sm opacity-90">
+              Week {currentWeek} • Started by {currentWordData.picker}
+            </div>
             <div className="mt-2 inline-block bg-white/20 px-4 py-1 rounded-full">
-              <span className="text-base">This week's word: <strong>{currentWord}</strong></span>
+              <span className="text-base">
+                This week's word: <strong>{currentWordData.word}</strong>
+              </span>
             </div>
           </div>
 
@@ -130,8 +172,8 @@ const WordleNerdlesApp = () => {
                     className="w-full p-4 text-base border-2 border-gray-200 rounded-lg"
                   >
                     <option value="">Select your name...</option>
-                    {mockPlayers.map(player => (
-                      <option key={player} value={player}>{player}</option>
+                    {players.map(player => (
+                      <option key={player.id} value={player.name}>{player.name}</option>
                     ))}
                   </select>
 
@@ -165,11 +207,15 @@ const WordleNerdlesApp = () => {
 
                   <button
                     onClick={handleScoreSubmit}
-                    disabled={!selectedPlayer || !selectedScore}
+                    disabled={!selectedPlayer || selectedScore === null}
                     className="w-full py-4 bg-gradient-to-r from-purple-500 to-purple-700 text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg"
                   >
                     {submitted ? '✅ Submitted!' : 'Submit Score'}
                   </button>
+                  
+                  <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
+                    <strong>Demo Mode:</strong> In the real app, scores will save to Firebase and sync across all devices instantly!
+                  </div>
                 </div>
               </div>
             )}
@@ -177,24 +223,30 @@ const WordleNerdlesApp = () => {
             {/* Leaderboard Tab */}
             {activeTab === 'leaderboard' && (
               <div className="p-6 space-y-3">
-                {mockLeaderboard.map((player, index) => (
-                  <div key={player.name} className="flex items-center p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
-                    <div className={`text-2xl font-bold w-8 text-center ${
-                      index === 0 ? 'text-yellow-500' : 
-                      index === 1 ? 'text-gray-400' : 
-                      index === 2 ? 'text-orange-600' : 'text-gray-600'
-                    }`}>
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 ml-4">
-                      <div className="font-semibold">{player.name}</div>
-                      <div className="text-xs text-gray-500">
-                        Avg: {player.avg} • Streak: {player.streak} {player.streak >= 5 && '🔥'}
-                      </div>
-                    </div>
-                    <div className="text-xl font-bold text-purple-600">{player.score}</div>
+                {weeklyScores.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No scores yet this week!
                   </div>
-                ))}
+                ) : (
+                  weeklyScores.map((player, index) => (
+                    <div key={player.name} className="flex items-center p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
+                      <div className={`text-2xl font-bold w-8 text-center ${
+                        index === 0 ? 'text-yellow-500' : 
+                        index === 1 ? 'text-gray-400' : 
+                        index === 2 ? 'text-orange-600' : 'text-gray-600'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 ml-4">
+                        <div className="font-semibold">{player.name}</div>
+                        <div className="text-xs text-gray-500">
+                          Avg: {player.avg} • Streak: {player.streak} {player.streak >= 5 && '🔥'}
+                        </div>
+                      </div>
+                      <div className="text-xl font-bold text-purple-600">{player.totalScore}</div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
 
@@ -217,15 +269,21 @@ const WordleNerdlesApp = () => {
                 <h3 className="font-semibold text-gray-700 mb-4">Today's Scores</h3>
                 
                 <div className="space-y-2">
-                  {mockScoresToday.map((entry, i) => (
-                    <div key={i} className="flex items-center p-3 bg-white rounded-lg shadow-sm">
-                      <div className={`w-10 h-10 ${getScoreColor(entry.score)} text-white rounded-lg flex items-center justify-center font-bold`}>
-                        {entry.score}
-                      </div>
-                      <div className="flex-1 ml-4 font-medium">{entry.player}</div>
-                      <div className="text-xs text-gray-500">{entry.time}</div>
+                  {todayScores.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      No scores submitted yet today!
                     </div>
-                  ))}
+                  ) : (
+                    todayScores.map((entry) => (
+                      <div key={entry.id} className="flex items-center p-3 bg-white rounded-lg shadow-sm">
+                        <div className={`w-10 h-10 ${getScoreColor(entry.score)} text-white rounded-lg flex items-center justify-center font-bold`}>
+                          {entry.score}
+                        </div>
+                        <div className="flex-1 ml-4 font-medium">{entry.player}</div>
+                        <div className="text-xs text-gray-500">{entry.time}</div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -235,20 +293,18 @@ const WordleNerdlesApp = () => {
               <div className="p-6 space-y-4">
                 <div className="bg-gradient-to-r from-pink-500 to-red-500 text-white p-4 rounded-xl text-center">
                   <h3 className="text-sm font-medium mb-1">Next Week's Word Picker</h3>
-                  <p className="text-xl font-bold">🎯 {nextWordPicker}</p>
-                  {nextWordPicker === 'Tom' && (
-                    <button
-                      onClick={() => setShowWordSubmit(!showWordSubmit)}
-                      className="mt-2 bg-white text-red-600 px-4 py-2 rounded-full text-sm font-bold"
-                    >
-                      Submit Starting Word
-                    </button>
-                  )}
+                  <p className="text-xl font-bold">🎯 Tom</p>
+                  <button
+                    onClick={() => setShowWordSubmit(!showWordSubmit)}
+                    className="mt-2 bg-white text-red-600 px-4 py-2 rounded-full text-sm font-bold"
+                  >
+                    Submit Starting Word
+                  </button>
                 </div>
 
                 {showWordSubmit && (
                   <div className="bg-white p-4 rounded-xl shadow-sm">
-                    <h4 className="font-semibold mb-2">Submit Starting Word</h4>
+                    <h4 className="font-semibold mb-2">Submit Starting Word for Week {currentWeek + 1}</h4>
                     <input
                       type="text"
                       value={wordInput}
@@ -265,7 +321,7 @@ const WordleNerdlesApp = () => {
                       </div>
                     )}
                     <button
-                      onClick={checkWord}
+                      onClick={submitWord}
                       className="w-full mt-3 py-3 bg-purple-600 text-white font-bold rounded-lg"
                     >
                       Check & Submit
@@ -276,12 +332,7 @@ const WordleNerdlesApp = () => {
                 <div className="bg-white p-4 rounded-xl shadow-sm">
                   <h3 className="font-semibold mb-3">📝 Previous Starting Words</h3>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {[
-                      { word: 'CRANE', week: 12, picker: 'Sarah' },
-                      { word: 'SLATE', week: 11, picker: 'Mike' },
-                      { word: 'AUDIO', week: 10, picker: 'Emma' },
-                      { word: 'ROAST', week: 9, picker: 'Alex' }
-                    ].map((item, i) => (
+                    {usedWords.map((item, i) => (
                       <div key={i} className="flex justify-between items-center py-2 border-b last:border-0">
                         <span className="font-bold text-purple-600 tracking-wider">{item.word}</span>
                         <span className="text-xs text-gray-500">Week {item.week} - {item.picker}</span>
@@ -298,12 +349,12 @@ const WordleNerdlesApp = () => {
                       <span className="font-semibold text-purple-600">Emma (2)</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
-                      <span className="text-gray-600">Group Average</span>
-                      <span className="font-semibold text-purple-600">3.4</span>
+                      <span className="text-gray-600">Players Today</span>
+                      <span className="font-semibold text-purple-600">{todayScores.length} / {players.length}</span>
                     </div>
                     <div className="flex justify-between py-2">
-                      <span className="text-gray-600">Completion Rate</span>
-                      <span className="font-semibold text-purple-600">62.5% (5/8)</span>
+                      <span className="text-gray-600">Week Leader</span>
+                      <span className="font-semibold text-purple-600">Emma</span>
                     </div>
                   </div>
                 </div>
