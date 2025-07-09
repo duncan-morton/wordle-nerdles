@@ -38,6 +38,28 @@ const [loading, setLoading] = useState(true);
 
 useEffect(() => {
   console.log('Loading players from Firebase...');
+  try {
+    const unsubscribe = onSnapshot(collection(db, 'players'), 
+      (snapshot) => {
+        console.log('Snapshot received:', snapshot.docs.length, 'players');
+        const playersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        console.log('Players data:', playersData);
+        setPlayers(playersData);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Firebase error:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  } catch (error) {
+    console.error('Setup error:', error);
+  }
+}, []);
   const unsubscribe = onSnapshot(collection(db, 'players'), (snapshot) => {
     const playersData = snapshot.docs.map(doc => ({
       id: doc.id,
