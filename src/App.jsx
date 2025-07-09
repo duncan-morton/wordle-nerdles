@@ -19,22 +19,11 @@ const WordleNerdlesApp = () => {
 const [players, setPlayers] = useState([]);
 const [loading, setLoading] = useState(true);
 
-  const [todayScores, setTodayScores] = useState([
-    { id: '1', player: 'Emma', score: 2, time: '8:32 AM' },
-    { id: '2', player: 'Mike', score: 3, time: '9:15 AM' }
-  ]);
+const [todayScores, setTodayScores] = useState([]);
 
-  const [weeklyScores] = useState([
-    { name: 'Emma', totalScore: 18, avg: 3.2, streak: 5 },
-    { name: 'Mike', totalScore: 20, avg: 3.5, streak: 3 },
-    { name: 'Sarah', totalScore: 22, avg: 3.8, streak: 6 }
-  ]);
+const [weeklyScores, setWeeklyScores] = useState([]);
 
-  const [usedWords] = useState([
-    { word: 'CRANE', week: 12, picker: 'Sarah' },
-    { word: 'SLATE', week: 11, picker: 'Mike' },
-    { word: 'AUDIO', week: 10, picker: 'Emma' }
-  ]);
+const [usedWords, setUsedWords] = useState([]);
 
 useEffect(() => {
   console.log('Loading players from Firebase...');
@@ -76,7 +65,7 @@ console.log('Test collection:', testCollection);
 }, []);
 
   const currentWeek = 12;
-  const currentWordData = { word: 'CRANE', picker: 'Sarah' };
+const currentWordData = { word: 'NONE', picker: 'TBD' };
 
   // Submit score
   const handleScoreSubmit = async () => {
