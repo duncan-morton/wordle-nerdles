@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
 // Demo version showing how the app will work with Firebase
@@ -15,16 +15,8 @@ const WordleNerdlesApp = () => {
   const [submitted, setSubmitted] = useState(false);
 
   // Demo data – in your real app, these come from Firebase
-  const [players] = useState([
-    { id: '1', name: 'Alex' },
-    { id: '2', name: 'Sarah' },
-    { id: '3', name: 'Mike' },
-    { id: '4', name: 'Emma' },
-    { id: '5', name: 'James' },
-    { id: '6', name: 'Lisa' },
-    { id: '7', name: 'Tom' },
-    { id: '8', name: 'Rachel' }
-  ]);
+const [players, setPlayers] = useState([]);
+const [loading, setLoading] = useState(true);
 
   const [todayScores, setTodayScores] = useState([
     { id: '1', player: 'Emma', score: 2, time: '8:32 AM' },
@@ -42,6 +34,19 @@ const WordleNerdlesApp = () => {
     { word: 'SLATE', week: 11, picker: 'Mike' },
     { word: 'AUDIO', week: 10, picker: 'Emma' }
   ]);
+
+useEffect(() => {
+  const unsubscribe = onSnapshot(collection(db, 'players'), (snapshot) => {
+    const playersData = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    setPlayers(playersData);
+    setLoading(false);
+  });
+
+  return () => unsubscribe();
+}, []);
 
   const currentWeek = 12;
   const currentWordData = { word: 'CRANE', picker: 'Sarah' };
