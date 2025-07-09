@@ -37,6 +37,7 @@ const [loading, setLoading] = useState(true);
   ]);
 
 useEffect(() => {
+  console.log('Loading players from Firebase...');
   const unsubscribe = onSnapshot(collection(db, 'players'), (snapshot) => {
     const playersData = snapshot.docs.map(doc => ({
       id: doc.id,
