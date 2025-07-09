@@ -123,24 +123,37 @@ const WordleNerdlesApp = () => {
     }
   };
 
-  const submitWord = () => {
-    const word = wordInput.toUpperCase();
+const submitWord = async () => {
+  const word = wordInput.toUpperCase();
+  console.log('Attempting to submit word:', word);
+  
+  if (word.length !== 5) {
+    setWordStatus({ message: '❌ Word must be exactly 5 letters', type: 'invalid' });
+    return;
+  }
+  
+  if (!/^[A-Z]{5}$/.test(word)) {
+    setWordStatus({ message: '❌ Word must contain only letters', type: 'invalid' });
+    return;
+  }
 
-    if (word.length !== 5)
-      return setWordStatus({ message: '❌ Word must be exactly 5 letters', type: 'invalid' });
-    if (!/^[A-Z]{5}$/.test(word))
-      return setWordStatus({ message: '❌ Word must contain only letters', type: 'invalid' });
-    if (usedWords.some(w => w.word === word))
-      return setWordStatus({ message: '❌ This word has already been used!', type: 'invalid' });
+  try {
+    console.log('Saving to Firebase...');
+    await addDoc(collection(db, 'startingWords'), {
+      word: word,
+      week: currentWeek + 1,
+      picker: 'Tom', // This should be dynamic based on who's logged in
+      dateUsed: Timestamp.now()
+    });
+    console.log('Word saved successfully!');
 
-    // normally save to Firebase here
     setWordStatus({ message: '✅ Word submitted successfully!', type: 'valid' });
     setWordInput('');
-    setTimeout(() => {
-      setShowWordSubmit(false);
-      setWordStatus({ message: '', type: '' });
-    }, 2000);
-  };
+  } catch (error) {
+    console.error('Error submitting word:', error);
+    setWordStatus({ message: '❌ Error submitting word', type: 'invalid' });
+  }
+};
 
   /* ---------------- JSX ---------------- */
   return (
