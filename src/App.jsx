@@ -38,6 +38,9 @@ const [loading, setLoading] = useState(true);
 
 useEffect(() => {
   console.log('Loading players from Firebase...');
+  // Test if we can read from Firebase at all
+const testCollection = collection(db, 'players');
+console.log('Test collection:', testCollection);
   try {
     const unsubscribe = onSnapshot(collection(db, 'players'), 
       (snapshot) => {
